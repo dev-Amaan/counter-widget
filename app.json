@@ -40,7 +40,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "./plugins/expo-native-counter-plugin"
     ],
     "experiments": {
       "typedRoutes": true,
