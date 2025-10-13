@@ -1,0 +1,56 @@
+package com.dev_amaan.CounterWidget
+
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.uimanager.SimpleViewManager
+import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.common.MapBuilder
+
+class CounterViewManager : SimpleViewManager<CounterView>() {
+
+    companion object {
+        const val REACT_CLASS = "NativeCounterView"
+        private const val COMMAND_INCREASE = 1
+        private const val COMMAND_DECREASE = 2
+    }
+
+    override fun getName(): String = REACT_CLASS
+
+    override fun createViewInstance(reactContext: ThemedReactContext): CounterView {
+        return CounterView(reactContext)
+    }
+
+    override fun getCommandsMap(): Map<String, Int> {
+        return mapOf(
+            "increase" to COMMAND_INCREASE,
+            "decrease" to COMMAND_DECREASE
+        )
+    }
+
+    override fun receiveCommand(
+        view: CounterView,
+        commandId: String,
+        args: ReadableArray?
+    ) {
+        when (commandId) {
+            "increase" -> view.increase()
+            "decrease" -> view.decrease()
+        }
+        
+        val event = Arguments.createMap().apply {
+            putInt("count", view.getCount())
+        }
+
+        val themedContext = view.context as? ThemedReactContext
+        themedContext?.getJSModule(RCTEventEmitter::class.java)
+            ?.receiveEvent(view.id, "onCountChange", event)
+    }
+
+    override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any>? {
+        return MapBuilder.of(
+            "onCountChange",
+            MapBuilder.of("registrationName", "onCountChange")
+        )
+    }
+}
