@@ -2,7 +2,7 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-const FULL_PACKAGE = 'com.dev_amaan.CounterWidget.CustomPackage';
+const FULL_PACKAGE = 'com.dev_amaan.counterwidget.CustomPackage';
 const SIMPLE_CLASS = 'CustomPackage';
 
 function copyFolderRecursiveSync(src, dest) {

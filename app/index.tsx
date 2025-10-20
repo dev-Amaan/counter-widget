@@ -7,14 +7,18 @@ export default function App() {
   const [count, setCount] = useState<number>(0);
 
   const sendCommand = useCallback((command: 'increase' | 'decrease') => {
-    if (counterRef.current) {
-      UIManager.dispatchViewManagerCommand(
-        findNodeHandle(counterRef.current),
-        command,
-        []
-      );
-    }
-  }, []);
+  if (!counterRef.current) return;
+
+  const viewId = findNodeHandle(counterRef.current);
+  if (!viewId) return;
+
+  const commandId =
+    command === 'increase'
+      ? UIManager.getViewManagerConfig('NativeCounterView').Commands.increase
+      : UIManager.getViewManagerConfig('NativeCounterView').Commands.decrease;
+
+  UIManager.dispatchViewManagerCommand(viewId, commandId, []);
+}, []);
 
   return (
     <View style={styles.container}>

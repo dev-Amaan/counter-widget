@@ -1,4 +1,4 @@
-package com.dev_amaan.CounterWidget
+package com.dev_amaan.counterwidget
 
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableArray
@@ -30,16 +30,16 @@ class CounterViewManager : SimpleViewManager<CounterView>() {
 
     override fun receiveCommand(
         view: CounterView,
-        commandId: String,
+        commandId: Int,
         args: ReadableArray?
     ) {
         when (commandId) {
-            "increase" -> view.increase()
-            "decrease" -> view.decrease()
+            COMMAND_INCREASE -> view.increase()
+            COMMAND_DECREASE -> view.decrease()
         }
         
         val event = Arguments.createMap().apply {
-            putInt("count", view.getCount())
+            putInt("saved_count", view.getCount())
         }
 
         val themedContext = view.context as? ThemedReactContext

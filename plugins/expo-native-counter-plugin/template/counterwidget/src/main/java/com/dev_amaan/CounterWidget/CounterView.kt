@@ -1,4 +1,4 @@
-package com.dev_amaan.CounterWidget
+package com.dev_amaan.counterwidget
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -6,6 +6,13 @@ import android.util.AttributeSet
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+
+import android.content.Intent
+import android.content.BroadcastReceiver
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
 
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.bridge.Arguments
@@ -66,6 +73,7 @@ class CounterView @JvmOverloads constructor(
         updateDecreaseButtonState()
         saveCount()
         sendCountEvent()
+        updateHomeWidget()
     }
 
     fun decrease() {
@@ -75,12 +83,22 @@ class CounterView @JvmOverloads constructor(
             updateDecreaseButtonState()
             saveCount()
             sendCountEvent()
+            updateHomeWidget()
         }
+    }
+
+    private fun updateHomeWidget() {
+        val intent = Intent(context, HomeScreenWidget::class.java)
+        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        val ids = AppWidgetManager.getInstance(context)
+            .getAppWidgetIds(ComponentName(context, HomeScreenWidget::class.java))
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        context.sendBroadcast(intent)
     }
 
     fun sendInitialCount() {
         val event = Arguments.createMap().apply {
-            putInt("count", count)
+            putInt(KEY_COUNT, count)
         }
         if (context is ThemedReactContext) {
             val themedContext = context as ThemedReactContext
@@ -92,16 +110,45 @@ class CounterView @JvmOverloads constructor(
         if (context is ThemedReactContext) {
             val themedContext = context as ThemedReactContext
             val event = Arguments.createMap().apply {
-                putInt("count", count)
+                putInt(KEY_COUNT, count)
             }
             themedContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, "onCountChange", event)
+        }
+    }
+
+    private val syncReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "ACTION_SYNC_UPDATE") {
+                val newCount = intent.getIntExtra("count", count)
+                if (newCount != count) {
+                    count = newCount
+                    updateCounterText()
+                    updateDecreaseButtonState()
+                }
+            }
         }
     }
 
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        
+        // Register broadcast receiver
+        ContextCompat.registerReceiver(
+            context,
+            syncReceiver,
+            IntentFilter("ACTION_SYNC_UPDATE"),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        
         sendCountEvent()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        
+        // Unregister broadcast receiver
+        context.unregisterReceiver(syncReceiver)
     }
 
     companion object {

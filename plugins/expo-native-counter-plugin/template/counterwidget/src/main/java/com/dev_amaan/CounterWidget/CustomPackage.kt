@@ -1,4 +1,4 @@
-package com.dev_amaan.CounterWidget
+package com.dev_amaan.counterwidget
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

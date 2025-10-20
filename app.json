@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dev-amaan.CounterWidget"
+      "bundleIdentifier": "com.dev-amaan.counterwidget"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.dev_amaan.CounterWidget"
+      "package": "com.dev_amaan.counterwidget"
     },
     "web": {
       "output": "static",
@@ -41,6 +41,7 @@
           }
         }
       ],
+      "./plugins/expo-native-counter-plugin/counterWidgetIndex",
       "./plugins/expo-native-counter-plugin"
     ],
     "experiments": {
