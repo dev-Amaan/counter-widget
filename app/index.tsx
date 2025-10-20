@@ -1,24 +1,62 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, UIManager, View, findNodeHandle } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, NativeModules, StyleSheet, Text, TouchableOpacity, UIManager, View, findNodeHandle } from 'react-native';
 import NativeCounterView from '../components/NativeCounterView';
 
+const { CounterModule } = NativeModules;
+
 export default function App() {
-  const counterRef = useRef<any>(null);
   const [count, setCount] = useState<number>(0);
+  const counterRef = useRef<any>(null);
+  const lastSyncedCountRef = useRef(count);
 
   const sendCommand = useCallback((command: 'increase' | 'decrease') => {
-  if (!counterRef.current) return;
+    if (!counterRef.current) return;
 
-  const viewId = findNodeHandle(counterRef.current);
-  if (!viewId) return;
+    const viewId = findNodeHandle(counterRef.current);
+    if (!viewId) return;
 
-  const commandId =
-    command === 'increase'
-      ? UIManager.getViewManagerConfig('NativeCounterView').Commands.increase
-      : UIManager.getViewManagerConfig('NativeCounterView').Commands.decrease;
+    const commandId =
+      command === 'increase'
+        ? UIManager.getViewManagerConfig('NativeCounterView').Commands.increase
+        : UIManager.getViewManagerConfig('NativeCounterView').Commands.decrease;
 
-  UIManager.dispatchViewManagerCommand(viewId, commandId, []);
-}, []);
+    UIManager.dispatchViewManagerCommand(viewId, commandId, []);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const saved = await CounterModule.getSharedCount();
+      setCount(saved);
+      lastSyncedCountRef.current = saved;
+    })();
+  }, []);
+
+  const handleCountChange = useCallback(async (event: any) => {
+    const newCount = event.nativeEvent.saved_count;
+    setCount(newCount);
+    lastSyncedCountRef.current = newCount;
+    await CounterModule.setSharedCount(newCount);
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (state) => {
+      if (state !== "active") return;
+
+      const latestCount = await CounterModule.getSharedCount();
+      const diff = latestCount - lastSyncedCountRef.current;
+      if (diff === 0) return;
+
+      for (let i = 0; i < Math.abs(diff); i++) {
+        if (diff > 0) sendCommand('increase');
+        else sendCommand('decrease');
+      }
+      setCount(latestCount);
+      lastSyncedCountRef.current = latestCount;
+    });
+
+    return () => subscription.remove();
+  }, []);
+
 
   return (
     <View style={styles.container}>
@@ -27,7 +65,7 @@ export default function App() {
         <NativeCounterView
           ref={counterRef}
           style={{ flex: 1 }}
-          onCountChange={(event) => setCount(event.nativeEvent.count)}
+          onCountChange={handleCountChange}
         />
       </View>
 

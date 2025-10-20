@@ -37,14 +37,6 @@ class CounterViewManager : SimpleViewManager<CounterView>() {
             COMMAND_INCREASE -> view.increase()
             COMMAND_DECREASE -> view.decrease()
         }
-        
-        val event = Arguments.createMap().apply {
-            putInt("saved_count", view.getCount())
-        }
-
-        val themedContext = view.context as? ThemedReactContext
-        themedContext?.getJSModule(RCTEventEmitter::class.java)
-            ?.receiveEvent(view.id, "onCountChange", event)
     }
 
     override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any>? {
